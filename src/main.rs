@@ -41,8 +41,3 @@ async fn main() {
     let scanner = Scanner::new(opts.start_port, opts.end_port, ip_address);
     scanner.scan().await;
 }
-
-// TODO: make scan faster with concurrency
-// TODO: add more argument and futures
-// TODO: write tests
-// TODO: create README.md
