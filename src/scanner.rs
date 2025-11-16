@@ -1,13 +1,14 @@
+use colored::Colorize;
 use futures::future;
 use port_check::is_port_reachable_with_timeout;
-use std::{net::IpAddr, time::Duration};
-use tokio::task::JoinHandle;
+use std::{net::IpAddr, sync::Arc, time::Duration};
+use tokio::{sync::Semaphore, task::JoinHandle};
 
 #[derive(Debug)]
 pub struct Scanner {
-    start_port: u16,
-    end_port: u16,
-    address: IpAddr,
+    pub start_port: u16,
+    pub end_port: u16,
+    pub address: IpAddr,
 }
 
 impl Scanner {
@@ -22,16 +23,20 @@ impl Scanner {
     pub async fn scan(&self) {
         log::info!("Start scanning for: {}\n", self.address);
 
+        let semaphore = Arc::new(Semaphore::new(200));
         let mut tasks: Vec<JoinHandle<()>> = vec![];
         let address = self.address;
 
+        log::info!("{}", "------------RESULT------------".green().bold());
         for port in self.start_port..self.end_port {
+            let permit = semaphore.clone().acquire_owned().await.unwrap();
+
             let task = tokio::spawn(async move {
-                if is_port_reachable_with_timeout(
-                    format!("{}:{}", address, port),
-                    Duration::from_millis(30),
-                ) {
-                    log::info!("Found: {}:{}", address, port);
+                let _permit = permit;
+                let target = format!("{}:{}", address, port);
+
+                if is_port_reachable_with_timeout(&target, Duration::from_millis(100)) {
+                    log::info!("{target}");
                 }
             });
 

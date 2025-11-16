@@ -2,9 +2,9 @@ use bpaf::Bpaf;
 use std::net::IpAddr;
 
 use crate::{
-    constants::{FALLBACK_IP_ADDRESS, MAX_PORT_RANGE},
+    constants::{LOCALHOST_IP_ADDRESS, MAX_PORT_RANGE},
     scanner::Scanner,
-    utils::{init_logger, translator},
+    utils::{get_version, init_logger, translator},
 };
 
 mod constants;
@@ -12,10 +12,13 @@ mod scanner;
 mod types;
 mod utils;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, Clone, Bpaf)]
 #[bpaf(options)]
 struct Arguments {
-    #[bpaf(long("address"), short('a'), fallback(FALLBACK_IP_ADDRESS))]
+    #[bpaf(long("address"), short('a'), fallback(LOCALHOST_IP_ADDRESS))]
     address: IpAddr,
     #[bpaf(long("host"), short('h'), fallback(None))]
     host: Option<String>,
@@ -29,6 +32,8 @@ struct Arguments {
 async fn main() {
     // init logger
     init_logger();
+
+    log::info!("port_scanner_x version {} started!", get_version());
 
     let opts = arguments().run();
     let ip_address = translator(opts.host, opts.address)

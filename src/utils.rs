@@ -36,8 +36,14 @@ pub async fn host_to_ip(host: String) -> GlobalResult<IpAddr> {
 pub async fn translator(host: Option<String>, address: IpAddr) -> GlobalResult<IpAddr> {
     if host.is_some() {
         log::info!("Translating host...");
-        Ok(host_to_ip(host.unwrap()).await?)
+        let extract = host_to_ip(host.unwrap()).await?;
+        Ok(extract)
     } else {
         Ok(address)
     }
+}
+
+pub fn get_version() -> String {
+    let version = env!("CARGO_PKG_VERSION");
+    version.to_string()
 }
